@@ -3,47 +3,17 @@
 const int SCREEN_WIDTH = 960;
 const int SCREEN_HEIGHT = 544;
 
-typedef struct
-{
-    Rectangle bounds;
-    Texture2D sprite;
-    int speed;
-    int score;
-} Player;
+int score = 0;
 
-Player player;
-
-Rectangle ball = {SCREEN_WIDTH / 2 + 50, SCREEN_HEIGHT / 2, 32, 32};
+Rectangle player = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 64, 64};
+Rectangle ball = {SCREEN_WIDTH / 2 + 150, SCREEN_HEIGHT / 2, 32, 32};
+Rectangle touchBounds = {0, 0, 8, 8};
 
 int ballVelocityX = 300;
 int ballVelocityY = 300;
 
-bool isGamePaused;
-
-Sound hitSound;
-
 void update(float deltaTime)
 {
-    if (IsKeyDown(KEY_W) && player.bounds.y >= 0)
-    {
-        player.bounds.y -= player.speed * deltaTime;
-    }
-
-    else if (IsKeyDown(KEY_S) && player.bounds.y <= SCREEN_HEIGHT - player.bounds.height)
-    {
-        player.bounds.y += player.speed * deltaTime;
-    }
-
-    else if (IsKeyDown(KEY_D) && player.bounds.x <= SCREEN_WIDTH - player.bounds.width)
-    {
-        player.bounds.x += player.speed * deltaTime;
-    }
-
-    else if (IsKeyDown(KEY_A) && player.bounds.x > 0)
-    {
-        player.bounds.x -= player.speed * deltaTime;
-    }
-
     if (ball.x < 0 || ball.x > SCREEN_WIDTH - ball.width)
     {
         ballVelocityX *= -1;
@@ -54,39 +24,16 @@ void update(float deltaTime)
         ballVelocityY *= -1;
     }
 
-    // Check collision between a two rectangles.
-    if (CheckCollisionRecs(ball, player.bounds))
+    if (CheckCollisionRecs(ball, player))
     {
         ballVelocityX *= -1;
         ballVelocityY *= -1;
 
-        player.score++;
-
-        PlaySound(hitSound);
+        score++;
     }
 
     ball.x += ballVelocityX * deltaTime;
     ball.y += ballVelocityY * deltaTime;
-}
-
-void draw()
-{
-    BeginDrawing();
-
-    ClearBackground(BLACK);
-
-    DrawText(TextFormat("%i", player.score), 230, 20, 80, WHITE);
-
-    DrawTexture(player.sprite, player.bounds.x, player.bounds.y, WHITE);
-
-    DrawRectangleRec(ball, WHITE);
-
-    if (isGamePaused)
-    {
-        DrawText("Game Paused", 220, 100, 80, WHITE);
-    }
-
-    EndDrawing();
 }
 
 int main()
@@ -94,46 +41,56 @@ int main()
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Starter");
     SetTargetFPS(60);
 
-    Texture2D sprite = LoadTexture("assets/img/alien.png");
-    player = {{SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, (float)sprite.width, (float)sprite.height}, sprite, 600, 0};
-
-    InitAudioDevice(); // Initialize audio device, before loading sound and music.
-
-    hitSound = LoadSound("assets/sounds/okay.wav");
-    Music music = LoadMusicStream("assets/music/pixel3.mp3");
-
-    music.looping = true;
-
-    PlayMusicStream(music);
+    bool isGamePaused = false;
 
     while (!WindowShouldClose())
     {
-        UpdateMusicStream(music);
-
-        float deltaTime = GetFrameTime();
-
         if (IsKeyPressed(KEY_SPACE))
         {
             isGamePaused = !isGamePaused;
-            PlaySound(hitSound);
         }
+
+        Vector2 mousePosition = GetMousePosition();
+
+        float deltaTime = GetFrameTime();
 
         if (!isGamePaused)
         {
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            {
+                player.x = mousePosition.x;
+                player.y = mousePosition.y;
+            }
+
             update(deltaTime);
         }
 
-        draw();
+        BeginDrawing();
+
+        ClearBackground(BLACK);
+
+        DrawText(TextFormat("%i", score), 230, 20, 80, WHITE);
+
+        DrawRectangleRec(player, WHITE);
+
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+            DrawRectangleRec(player, RED);
+        }
+        else
+        {
+            DrawRectangleRec(player, BLUE);
+        }
+
+        DrawRectangleRec(ball, YELLOW);
+
+        if (isGamePaused)
+        {
+            DrawText("Game Paused", 220, 100, 80, WHITE);
+        }
+
+        EndDrawing();
     }
-
-    // Unload texture data
-    UnloadTexture(player.sprite);
-
-    // Unload sound data
-    UnloadSound(hitSound);
-    UnloadMusicStream(music);
-
-    CloseAudioDevice();
 
     CloseWindow();
 }
