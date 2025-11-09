@@ -7,7 +7,6 @@ int score = 0;
 
 Rectangle player = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 64, 64};
 Rectangle ball = {SCREEN_WIDTH / 2 + 150, SCREEN_HEIGHT / 2, 32, 32};
-Rectangle touchBounds = {0, 0, 8, 8};
 
 int ballVelocityX = 300;
 int ballVelocityY = 300;
