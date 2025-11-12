@@ -5,24 +5,34 @@ int main()
     const int SCREEN_WIDTH = 960;
     const int SCREEN_HEIGHT = 544;
 
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Starter");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Raylib-Web");
     SetTargetFPS(60);
+    InitAudioDevice();
 
-    Rectangle player = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 64, 64};
+    Texture2D texture = LoadTexture("assets/img/alien.png");
+    Rectangle rectangle = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, (float)texture.width, (float)texture.height};
+
     Rectangle ball = {SCREEN_WIDTH / 2 + 150, SCREEN_HEIGHT / 2, 32, 32};
-
     Vector2 ballVelocity = {300, 300};
+
+    Sound hitSound = LoadSound("assets/sounds/okay.wav");
+
+    Music music = LoadMusicStream("assets/music/pixel3.mp3");
+    music.looping = true;
+    PlayMusicStream(music);
 
     int score = 0;
 
     while (!WindowShouldClose())
     {
-        Vector2 mousePosition = GetMousePosition();
+        UpdateMusicStream(music);
 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
         {
-            player.x = mousePosition.x;
-            player.y = mousePosition.y;
+            Vector2 mousePosition = GetMousePosition();
+
+            rectangle.x = mousePosition.x;
+            rectangle.y = mousePosition.y;
         }
 
         if (ball.x < 0 || ball.x > SCREEN_WIDTH - ball.width)
@@ -35,12 +45,14 @@ int main()
             ballVelocity.y *= -1;
         }
 
-        if (CheckCollisionRecs(ball, player))
+        if (CheckCollisionRecs(ball, rectangle))
         {
             ballVelocity.x *= -1;
             ballVelocity.y *= -1;
 
             score++;
+
+            PlaySound(hitSound);
         }
 
         float deltaTime = GetFrameTime();
@@ -54,22 +66,17 @@ int main()
 
         DrawText(TextFormat("%i", score), SCREEN_WIDTH / 2, 20, 80, WHITE);
 
-        DrawRectangleRec(player, WHITE);
-
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-        {
-            DrawRectangleRec(player, RED);
-        }
-        else
-        {
-            DrawRectangleRec(player, BLUE);
-        }
+        DrawTexture(texture, rectangle.x, rectangle.y, WHITE);
 
         DrawRectangleRec(ball, YELLOW);
 
         EndDrawing();
     }
 
+    UnloadTexture(texture);
+    UnloadSound(hitSound);
+    UnloadMusicStream(music);
+    CloseAudioDevice();
     CloseWindow();
     return 0;
 }
