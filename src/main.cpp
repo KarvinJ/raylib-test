@@ -1,74 +1,58 @@
 #include <raylib.h>
 
-const int SCREEN_WIDTH = 960;
-const int SCREEN_HEIGHT = 544;
-
-int score = 0;
-
-Rectangle player = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 64, 64};
-Rectangle ball = {SCREEN_WIDTH / 2 + 150, SCREEN_HEIGHT / 2, 32, 32};
-
-int ballVelocityX = 300;
-int ballVelocityY = 300;
-
-void update(float deltaTime)
-{
-    if (ball.x < 0 || ball.x > SCREEN_WIDTH - ball.width)
-    {
-        ballVelocityX *= -1;
-    }
-
-    else if (ball.y < 0 || ball.y > SCREEN_HEIGHT - ball.height)
-    {
-        ballVelocityY *= -1;
-    }
-
-    if (CheckCollisionRecs(ball, player))
-    {
-        ballVelocityX *= -1;
-        ballVelocityY *= -1;
-
-        score++;
-    }
-
-    ball.x += ballVelocityX * deltaTime;
-    ball.y += ballVelocityY * deltaTime;
-}
-
 int main()
 {
+    const int SCREEN_WIDTH = 960;
+    const int SCREEN_HEIGHT = 544;
+
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Starter");
     SetTargetFPS(60);
 
-    bool isGamePaused = false;
+    Rectangle player = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 64, 64};
+    Rectangle ball = {SCREEN_WIDTH / 2 + 150, SCREEN_HEIGHT / 2, 32, 32};
+
+    Vector2 ballVelocity = {300, 300};
+
+    int score = 0;
 
     while (!WindowShouldClose())
     {
-        if (IsKeyPressed(KEY_SPACE))
+        Vector2 mousePosition = GetMousePosition();
+
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
         {
-            isGamePaused = !isGamePaused;
+            player.x = mousePosition.x;
+            player.y = mousePosition.y;
         }
 
-        Vector2 mousePosition = GetMousePosition();
+        if (ball.x < 0 || ball.x > SCREEN_WIDTH - ball.width)
+        {
+            ballVelocity.x *= -1;
+        }
+
+        else if (ball.y < 0 || ball.y > SCREEN_HEIGHT - ball.height)
+        {
+            ballVelocity.y *= -1;
+        }
+
+        if (CheckCollisionRecs(ball, player))
+        {
+            ballVelocity.x *= -1;
+            ballVelocity.y *= -1;
+
+            score++;
+        }
 
         float deltaTime = GetFrameTime();
 
-        if (!isGamePaused)
-        {
-            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-            {
-                player.x = mousePosition.x;
-                player.y = mousePosition.y;
-            }
-
-            update(deltaTime);
-        }
+        ball.x += ballVelocity.x * deltaTime;
+        ball.y += ballVelocity.y * deltaTime;
 
         BeginDrawing();
 
         ClearBackground(BLACK);
 
-        DrawText(TextFormat("%i", score), 230, 20, 80, WHITE);
+        DrawText(TextFormat("%i", score), SCREEN_WIDTH / 2, 20, 80, WHITE);
 
         DrawRectangleRec(player, WHITE);
 
@@ -82,11 +66,6 @@ int main()
         }
 
         DrawRectangleRec(ball, YELLOW);
-
-        if (isGamePaused)
-        {
-            DrawText("Game Paused", 220, 100, 80, WHITE);
-        }
 
         EndDrawing();
     }
